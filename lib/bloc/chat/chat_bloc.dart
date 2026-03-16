@@ -422,10 +422,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       print('====================================================');
 
       // Create multipart file from path
-      final audioFile = await http.MultipartFile.fromPath(
+final audioFile = await http.MultipartFile.fromPath(
         'audio',
         event.audioPath,
-        contentType: MediaType('multipart', 'form-data'),
+        contentType: MediaType('audio', 'x-m4a'), // ✅ Matches swagger
       );
 
       print('📦 MULTIPART FILE DETAILS:');
