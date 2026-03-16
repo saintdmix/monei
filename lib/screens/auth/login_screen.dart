@@ -9,9 +9,10 @@ import '../../components/inputs/app_text_field.dart';
 import '../../core/constants/app_styles.dart';
 import '../../core/theme/app_colors_extension.dart';
 import '../../core/utils/utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'signup_screen.dart';
-import '../chat/chat_screen.dart';
 import 'email_verify_screen.dart';
+import '../onboarding/onboarding_flow_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -81,7 +82,9 @@ class _LoginScreenState extends State<LoginScreen>
           );
         } else if (state is AuthAuthenticated) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const ChatScreen()),
+            MaterialPageRoute(
+              builder: (_) => const OnboardingFlowScreen(startStep: 1),
+            ),
           );
         } else if (state is AuthError) {
           AppUtils.showSnackBar(context, state.message, isError: true);
@@ -122,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 'assets/images/logo.png',
                                 width: 72,
                                 height: 72,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
@@ -204,7 +207,20 @@ class _LoginScreenState extends State<LoginScreen>
                             children: [
                               _SocialButton(
                                 icon: Icons.g_mobiledata_rounded,
-                                onTap: () {},
+                                onTap: () async {
+                                  final Uri url = Uri.parse(
+                                    'https://api.monei.cc/api/v1/onboarding/google',
+                                  );
+                                  if (!await launchUrl(url)) {
+                                    if (context.mounted) {
+                                      AppUtils.showSnackBar(
+                                        context,
+                                        'Could not launch Google Sign In',
+                                        isError: true,
+                                      );
+                                    }
+                                  }
+                                },
                               ),
                               const SizedBox(width: 16),
                               _SocialButton(

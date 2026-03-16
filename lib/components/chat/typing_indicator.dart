@@ -58,17 +58,17 @@ class _TypingIndicatorState extends State<TypingIndicator>
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(
-              gradient: colors.primaryGradient,
-              borderRadius: BorderRadius.circular(10),
-            ),
+            // decoration: BoxDecoration(
+            //   gradient: colors.primaryGradient,
+            //   borderRadius: BorderRadius.circular(10),
+            // ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 'assets/images/logo.png',
                 width: 32,
                 height: 32,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
             ),
           ),

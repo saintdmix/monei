@@ -1,7 +1,9 @@
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/models/conversation.dart';
 import 'chat_event.dart';
@@ -46,6 +48,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatSendMessage event,
     Emitter<ChatState> emit,
   ) async {
+    
     final userMsg = ChatMessage(
       id: _nextMsgId(),
       content: event.content,
@@ -358,6 +361,26 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
+// Add this helper method inside ChatBloc:
+Future<String> _convertToM4a(String inputPath) async {
+  // If already m4a, return as-is
+  if (inputPath.toLowerCase().endsWith('.m4a')) return inputPath;
+
+  final dir = await getTemporaryDirectory();
+  final outputPath = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+  final session = await FFmpegKit.execute(
+    '-i "$inputPath" -c:a aac -b:a 128k "$outputPath" -y',
+  );
+
+  final returnCode = await session.getReturnCode();
+  if (returnCode?.isValueSuccess() == true) {
+    return outputPath;
+  } else {
+    debugPrint('FFmpeg conversion failed, using original file');
+    return inputPath; // fallback to original
+  }
+}
   Future<void> _onCancelRecording(
     ChatCancelRecording event,
     Emitter<ChatState> emit,
@@ -422,11 +445,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       print('====================================================');
 
       // Create multipart file from path
-final audioFile = await http.MultipartFile.fromPath(
-        'audio',
-        event.audioPath,
-        contentType: MediaType('audio', 'x-m4a'), // ✅ Matches swagger
-      );
+      final m4aPath = await _convertToM4a(event.audioPath);
+
+  final audioFile = await http.MultipartFile.fromPath(
+    'audio',
+    m4aPath,
+    contentType: MediaType('audio', 'x-m4a'),  // ✅ Correct content type
+  );
+// final audioFile = await http.MultipartFile.fromPath(
+//         'audio',
+//         event.audioPath,
+//         contentType: MediaType('audio', 'x-m4a'), // ✅ Matches swagger
+//       );
 
       print('📦 MULTIPART FILE DETAILS:');
       print('▶ field: ${audioFile.field}');

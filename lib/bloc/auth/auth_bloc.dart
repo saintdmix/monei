@@ -133,6 +133,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final result = await _repo.verifyEmailOtp(
         email: event.email,
         otp: event.otp,
+        pin: event.pin,
+        confirmPin: event.confirmPin,
       );
       if (result.isSuccess) {
         // Fetch full profile now that email is verified

@@ -264,11 +264,33 @@ class AuthRepository {
   Future<ApiResponse<Map<String, dynamic>>> verifyEmailOtp({
     required String email,
     required String otp,
+    required String pin,
+    required String confirmPin,
   }) async {
     final response = await _api.onboarding.verifyEmailOtp({
       'email': email,
       'otp': otp,
+      'pin': pin,
+      'confirmPin': confirmPin,
     });
+    
+    if (response.isSuccessful && response.body != null) {
+      final body = response.body as Map<String, dynamic>;
+      final data = body['data'] as Map<String, dynamic>?;
+      final token =
+          data?['access_token'] ??
+          data?['token'] ??
+          data?['accessToken'] ??
+          body['access_token'] ??
+          body['token'] ??
+          body['accessToken'];
+
+      if (token != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+      }
+    }
+    
     return ApiResponse.fromResponse(response);
   }
 

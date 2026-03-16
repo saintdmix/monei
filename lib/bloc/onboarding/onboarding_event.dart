@@ -23,10 +23,17 @@ class OnboardingRequestEmailSignup extends OnboardingEvent {
 class OnboardingVerifyEmailOtp extends OnboardingEvent {
   final String email;
   final String otp;
-  const OnboardingVerifyEmailOtp({required this.email, required this.otp});
+  final String pin;
+  final String confirmPin;
+  const OnboardingVerifyEmailOtp({
+    required this.email,
+    required this.otp,
+    required this.pin,
+    required this.confirmPin,
+  });
 
   @override
-  List<Object?> get props => [email, otp];
+  List<Object?> get props => [email, otp, pin, confirmPin];
 }
 
 /// Step 3: Complete profile.
@@ -59,4 +66,17 @@ class OnboardingVerifyPhoneOtp extends OnboardingEvent {
 
   @override
   List<Object?> get props => [phone, otp];
+}
+
+/// Set transaction PIN.
+class OnboardingSetTransactionPin extends OnboardingEvent {
+  final String newPin;
+  final String confirmPin;
+  const OnboardingSetTransactionPin({
+    required this.newPin,
+    required this.confirmPin,
+  });
+
+  @override
+  List<Object?> get props => [newPin, confirmPin];
 }

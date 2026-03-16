@@ -59,11 +59,18 @@ class AuthSendVerificationEmail extends AuthEvent {
 class AuthVerifyEmailOtp extends AuthEvent {
   final String email;
   final String otp;
+  final String pin;
+  final String confirmPin;
 
-  const AuthVerifyEmailOtp({required this.email, required this.otp});
+  const AuthVerifyEmailOtp({
+    required this.email,
+    required this.otp,
+    required this.pin,
+    required this.confirmPin,
+  });
 
   @override
-  List<Object?> get props => [email, otp];
+  List<Object?> get props => [email, otp, pin, confirmPin];
 }
 
 /// Fetch current user profile.

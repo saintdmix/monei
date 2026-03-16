@@ -21,6 +21,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<OnboardingCompleteProfile>(_onCompleteProfile);
     on<OnboardingSendPhoneOtp>(_onSendPhoneOtp);
     on<OnboardingVerifyPhoneOtp>(_onVerifyPhoneOtp);
+    on<OnboardingSetTransactionPin>(_onSetTransactionPin);
   }
 
   Future<void> _onCheckStatus(
@@ -34,10 +35,26 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         final data = result.data!;
         // Determine current step from status
         int step = 1;
-        if (data['emailVerified'] == true) step = 3;
-        if (data['profileCompleted'] == true) step = 4;
-        if (data['phoneVerified'] == true) step = 5;
-        if (data['completed'] == true) {
+        final String? nextStep = data['nextStep'];
+        
+        if (nextStep == 'TRANSACTION_PIN_SET' || nextStep == 'SET_TRANSACTION_PIN') {
+          step = 6;
+        } else if (nextStep == 'PROFILE_COMPLETE' || nextStep == 'COMPLETE_PROFILE') {
+          step = 5;
+        } else if (nextStep == 'PHONE_SETUP' || nextStep == 'PHONE_VERIFICATION') {
+          step = 3;
+        } else {
+          if (data['emailVerified'] == true && data['hasLoginPin'] == true) {
+            step = 3; // Phone Setup
+          }
+          if (data['phoneVerified'] == true) {
+            step = 5; // To Profile Setup
+          }
+          if (data['hasProfile'] == true) {
+            step = 6; // To Transaction PIN
+          }
+        }
+        if (data['hasTransactionPin'] == true || data['percentComplete'] == 100) {
           emit(OnboardingComplete());
         } else {
           emit(OnboardingStepState(currentStep: step, status: data));
@@ -76,6 +93,8 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       final result = await _repo.verifyEmailOtp(
         email: event.email,
         otp: event.otp,
+        pin: event.pin,
+        confirmPin: event.confirmPin,
       );
       if (result.isSuccess) {
         emit(OnboardingStepSuccess(completedStep: 2, message: result.message));
@@ -98,7 +117,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         lastName: event.lastName,
       );
       if (result.isSuccess) {
-        emit(OnboardingStepSuccess(completedStep: 3, message: result.message));
+        emit(OnboardingStepSuccess(completedStep: 5, message: result.message));
       } else {
         emit(OnboardingError(message: result.message));
       }
@@ -115,7 +134,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     try {
       final result = await _repo.sendPhoneOtp(event.phone);
       if (result.isSuccess) {
-        emit(OnboardingStepSuccess(completedStep: 4, message: result.message));
+        emit(OnboardingStepSuccess(completedStep: 3, message: result.message));
       } else {
         emit(OnboardingError(message: result.message));
       }
@@ -133,6 +152,26 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       final result = await _repo.verifyPhoneOtp(
         phone: event.phone,
         otp: event.otp,
+      );
+      if (result.isSuccess) {
+        emit(OnboardingStepSuccess(completedStep: 4, message: result.message));
+      } else {
+        emit(OnboardingError(message: result.message));
+      }
+    } catch (e) {
+      emit(OnboardingError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSetTransactionPin(
+    OnboardingSetTransactionPin event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    emit(OnboardingLoading());
+    try {
+      final result = await _repo.setTransactionPin(
+        newPin: event.newPin,
+        confirmPin: event.confirmPin,
       );
       if (result.isSuccess) {
         emit(OnboardingComplete());

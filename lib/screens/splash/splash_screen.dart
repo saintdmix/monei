@@ -276,24 +276,24 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    SlideTransition(
-                      position: _titleSlide,
-                      child: Opacity(
-                        opacity: _titleOpacity.value,
-                        child: Text(
-                          'Mr Monei',
-                          style: GoogleFonts.poppins(
-                            fontSize: 42,
-                            fontWeight: FontWeight.w700,
-                            color: _titleColor.value ?? primaryColor,
-                            letterSpacing: -0.5,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    // const SizedBox(height: 20),
+                    // SlideTransition(
+                    //   position: _titleSlide,
+                    //   child: Opacity(
+                    //     opacity: _titleOpacity.value,
+                    //     child: Text(
+                    //       'Mr Monei',
+                    //       style: GoogleFonts.poppins(
+                    //         fontSize: 42,
+                    //         fontWeight: FontWeight.w700,
+                    //         color: _titleColor.value ?? primaryColor,
+                    //         letterSpacing: -0.5,
+                    //         height: 1.2,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 8),
                     SlideTransition(
                       position: _subtitleSlide,
                       child: Opacity(

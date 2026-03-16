@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/auth/auth_bloc.dart';
-import '../../bloc/auth/auth_event.dart';
-import '../../bloc/auth/auth_state.dart';
+import '../../bloc/onboarding/onboarding_bloc.dart';
+import '../../bloc/onboarding/onboarding_event.dart';
+import '../../bloc/onboarding/onboarding_state.dart';
 import '../../components/buttons/gradient_button.dart';
 import '../../components/common/animated_background.dart';
 import '../../components/inputs/app_text_field.dart';
 import '../../core/constants/app_styles.dart';
 import '../../core/theme/app_colors_extension.dart';
 import '../../core/utils/utils.dart';
-import '../chat/chat_screen.dart';
-import 'email_verify_screen.dart';
+import '../onboarding/onboarding_flow_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -22,12 +21,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _pinController = TextEditingController();
-  final _confirmPinController = TextEditingController();
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -53,12 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen>
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
-    _pinController.dispose();
-    _confirmPinController.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -66,14 +55,8 @@ class _SignUpScreenState extends State<SignUpScreen>
   void _handleSignUp() {
     if (_formKey.currentState?.validate() ?? false) {
       AppUtils.dismissKeyboard(context);
-      context.read<AuthBloc>().add(
-        AuthSignUpRequested(
-          firstName: _firstNameController.text.trim(),
-          lastName: _lastNameController.text.trim(),
-          email: _emailController.text.trim(),
-          pin: _pinController.text,
-          phone: _phoneController.text.trim(),
-        ),
+      context.read<OnboardingBloc>().add(
+        OnboardingRequestEmailSignup(email: _emailController.text.trim()),
       );
     }
   }
@@ -81,20 +64,18 @@ class _SignUpScreenState extends State<SignUpScreen>
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return BlocListener<AuthBloc, AuthState>(
+    return BlocListener<OnboardingBloc, OnboardingState>(
       listener: (context, state) {
-        if (state is AuthEmailUnverified) {
+        if (state is OnboardingStepSuccess && state.completedStep == 1) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (_) => EmailVerifyScreen(email: state.email),
+              builder: (_) => OnboardingFlowScreen(
+                initialEmail: _emailController.text.trim(),
+                startStep: 2,
+              ),
             ),
           );
-        } else if (state is AuthAuthenticated) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const ChatScreen()),
-            (route) => false,
-          );
-        } else if (state is AuthError) {
+        } else if (state is OnboardingError) {
           AppUtils.showSnackBar(context, state.message, isError: true);
         }
       },
@@ -133,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                                 'assets/images/logo.png',
                                 width: 72,
                                 height: 72,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
@@ -141,30 +122,12 @@ class _SignUpScreenState extends State<SignUpScreen>
                           Text('Create Account', style: AppStyles.h1(context)),
                           const SizedBox(height: 8),
                           Text(
-                            'Join Mr Monei and start chatting',
+                            'Get started with your email',
                             style: AppStyles.bodyMedium(
                               context,
                             ).copyWith(color: colors.textSecondary),
                           ),
                           const SizedBox(height: 36),
-                          AppTextField(
-                            hintText: 'John',
-                            labelText: 'First Name',
-                            controller: _firstNameController,
-                            prefixIcon: Icons.person_outline_rounded,
-                            validator: AppUtils.validateName,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 20),
-                          AppTextField(
-                            hintText: 'Doe',
-                            labelText: 'Last Name',
-                            controller: _lastNameController,
-                            prefixIcon: Icons.person_outline_rounded,
-                            validator: AppUtils.validateName,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 20),
                           AppTextField(
                             hintText: 'Email address',
                             labelText: 'Email',
@@ -172,54 +135,14 @@ class _SignUpScreenState extends State<SignUpScreen>
                             keyboardType: TextInputType.emailAddress,
                             prefixIcon: Icons.email_outlined,
                             validator: AppUtils.validateEmail,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 20),
-                          AppTextField(
-                            hintText: '+234XXXXXXXXXX',
-                            labelText: 'Phone Number',
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: Icons.phone_outlined,
-                            validator: (val) => val == null || val.isEmpty
-                                ? 'Phone is required'
-                                : null,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 20),
-                          AppTextField(
-                            hintText: 'Password',
-                            labelText: 'Password',
-                            controller: _pinController,
-                            obscureText: true,
-                            keyboardType: TextInputType.name,
-                            prefixIcon: Icons.lock_outline_rounded,
-                            validator: (val) => val == null || val.length < 4
-                                ? 'Password must be at least 4 digits'
-                                : null,
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 20),
-                          AppTextField(
-                            hintText: 'Re-enter Password',
-                            labelText: 'Confirm Password',
-                            controller: _confirmPinController,
-                            obscureText: true,
-                            keyboardType: TextInputType.name,
-                            prefixIcon: Icons.lock_outline_rounded,
-                            validator: (val) {
-                              if (val != _pinController.text)
-                                return 'Passwords do not match';
-                              return null;
-                            },
                             textInputAction: TextInputAction.done,
                           ),
                           const SizedBox(height: 32),
-                          BlocBuilder<AuthBloc, AuthState>(
+                          BlocBuilder<OnboardingBloc, OnboardingState>(
                             builder: (context, state) {
                               return GradientButton(
-                                text: 'Create Account',
-                                isLoading: state is AuthLoading,
+                                text: 'Continue',
+                                isLoading: state is OnboardingLoading,
                                 onPressed: _handleSignUp,
                               );
                             },

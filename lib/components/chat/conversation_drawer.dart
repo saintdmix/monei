@@ -56,9 +56,9 @@ class ConversationDrawer extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       child: Image.asset(
                         'assets/images/logo.png',
-                        width: 40,
+                        // width: 40,
                         height: 40,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
