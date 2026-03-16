@@ -1,0 +1,10 @@
+targets:
+  $default:
+    builders:
+      swagger_dart_code_generator:
+        options:
+          input_folder: "lib/api_doc/"
+          output_folder: "lib/api/"
+          with_chopper: true
+          build_only_models: false
+          use_path_for_chopper_apis: false
