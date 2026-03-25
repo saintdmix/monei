@@ -374,12 +374,9 @@ class _VerifyPhoneOtpViewState extends State<_VerifyPhoneOtpView> {
         const SizedBox(height: 40),
         BlocConsumer<OnboardingBloc, OnboardingState>(
           listener: (context, state) {
-            // If the bloc finishes profile here due to earlier bugs, we just force success on complete.
-            // Based on my patching, completedStep == 4 means phone OTP successful.
             if (state is OnboardingStepSuccess && state.completedStep == 4) {
-              widget.onSuccess();
-            } else if (state is OnboardingComplete) {
-              // But it never emits complete here, because it emits stepSuccess
+              // Check the status to determine next step
+              context.read<OnboardingBloc>().add(OnboardingCheckStatus());
             }
           },
           builder: (context, state) {

@@ -32,11 +32,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final result = await _repo.login(email: event.email, pin: event.pin);
       if (result.isSuccess && result.data != null) {
         final user = result.data!;
-        if (user.onboardingState == 'EMAIL_UNVERIFIED') {
-          emit(AuthEmailUnverified(email: user.email));
-        } else {
-          emit(AuthAuthenticated(user: user));
-        }
+        // if (user.onboardingState == 'EMAIL_UNVERIFIED') {
+        //   emit(AuthEmailUnverified(email: user.email));
+        // } else {
+        //   emit(AuthAuthenticated(user: user));
+        // }
+        switch (user.onboardingState) {
+  case 'EMAIL_UNVERIFIED':
+    emit(AuthEmailUnverified(email: user.email));
+    break;
+  case 'PHONE_UNVERIFIED':        // ← whatever your backend calls this
+    emit(AuthOnboardingIncomplete(user: user, step: 'PHONE_UNVERIFIED'));
+    break;
+  case 'PROFILE_INCOMPLETE':      // ← and this
+    emit(AuthOnboardingIncomplete(user: user, step: 'PROFILE_INCOMPLETE'));
+    break;
+  case 'TRANSACTION_PIN_UNSET':   // ← and this, if it exists
+    emit(AuthOnboardingIncomplete(user: user, step: 'TRANSACTION_PIN_UNSET'));
+    break;
+  default:
+    emit(AuthAuthenticated(user: user));
+}
       } else {
         emit(AuthError(message: result.message));
       }

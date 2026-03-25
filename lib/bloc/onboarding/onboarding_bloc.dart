@@ -33,32 +33,37 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       final result = await _repo.getOnboardingStatus();
       if (result.isSuccess && result.data != null) {
         final data = result.data!;
-        // Determine current step from status
+        
+        // Check if fully complete first
+        if (data['hasTransactionPin'] == true || data['percentComplete'] == 100) {
+          emit(OnboardingComplete());
+          return;
+        }
+        
+        // Determine current step from nextStep field
         int step = 1;
         final String? nextStep = data['nextStep'];
         
-        if (nextStep == 'TRANSACTION_PIN_SET' || nextStep == 'SET_TRANSACTION_PIN') {
-          step = 6;
+        if (nextStep == 'PHONE_PENDING' || nextStep == 'PHONE_SETUP' || nextStep == 'PHONE_VERIFICATION') {
+          step = 3; // Phone Setup
         } else if (nextStep == 'PROFILE_COMPLETE' || nextStep == 'COMPLETE_PROFILE') {
-          step = 5;
-        } else if (nextStep == 'PHONE_SETUP' || nextStep == 'PHONE_VERIFICATION') {
-          step = 3;
+          step = 5; // Complete Profile
+        } else if (nextStep == 'TRANSACTION_PIN_SET' || nextStep == 'SET_TRANSACTION_PIN' || nextStep == 'TRANSACTION_PIN_PENDING') {
+          step = 6; // Transaction PIN
         } else {
-          if (data['emailVerified'] == true && data['hasLoginPin'] == true) {
-            step = 3; // Phone Setup
-          }
-          if (data['phoneVerified'] == true) {
-            step = 5; // To Profile Setup
-          }
-          if (data['hasProfile'] == true) {
-            step = 6; // To Transaction PIN
+          // Fallback logic if nextStep is not recognized
+          if (data['emailVerified'] != true || data['hasLoginPin'] != true) {
+            step = 1;
+          } else if (data['hasProfile'] != true) {
+            step = 5;
+          } else if (data['phoneVerified'] != true) {
+            step = 3;
+          } else {
+            step = 6;
           }
         }
-        if (data['hasTransactionPin'] == true || data['percentComplete'] == 100) {
-          emit(OnboardingComplete());
-        } else {
-          emit(OnboardingStepState(currentStep: step, status: data));
-        }
+        
+        emit(OnboardingStepState(currentStep: step, status: data));
       } else {
         emit(const OnboardingStepState(currentStep: 1));
       }
@@ -154,7 +159,17 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         otp: event.otp,
       );
       if (result.isSuccess) {
-        emit(OnboardingStepSuccess(completedStep: 4, message: result.message));
+        // Check the nextStep from the response to determine where to go
+        final nextStep = result.data?['nextStep'];
+        int completedStep = 4; // Default: phone verified
+        
+        if (nextStep == 'SET_TRANSACTION_PIN' || nextStep == 'TRANSACTION_PIN_PENDING') {
+          completedStep = 4; // Skip profile, go to transaction PIN
+        } else if (nextStep == 'COMPLETE_PROFILE' || nextStep == 'PROFILE_COMPLETE') {
+          completedStep = 4; // Go to profile completion
+        }
+        
+        emit(OnboardingStepSuccess(completedStep: completedStep, message: result.message));
       } else {
         emit(OnboardingError(message: result.message));
       }

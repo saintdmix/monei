@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _pinController = TextEditingController();
+  final _PasswordController = TextEditingController();
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _emailController.dispose();
-    _pinController.dispose();
+    _PasswordController.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen>
       context.read<AuthBloc>().add(
         AuthLoginRequested(
           email: _emailController.text.trim(),
-          pin: _pinController.text,
+          pin: _PasswordController.text,
         ),
       );
     }
@@ -150,14 +150,14 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                           const SizedBox(height: 20),
                           AppTextField(
-                            hintText: 'Enter your PIN',
-                            labelText: 'PIN',
-                            controller: _pinController,
+                            hintText: 'Enter your Password',
+                            labelText: 'Password',
+                            controller: _PasswordController,
                             obscureText: true,
                             keyboardType: TextInputType.name,
                             prefixIcon: Icons.lock_outline_rounded,
                             validator: (val) => val == null || val.isEmpty
-                                ? 'PIN is required'
+                                ? 'Password is required'
                                 : null,
                             textInputAction: TextInputAction.done,
                           ),

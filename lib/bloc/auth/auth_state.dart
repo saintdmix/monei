@@ -42,7 +42,15 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+class AuthOnboardingIncomplete extends AuthState {
+  final UserModel user;
+  final String step;
 
+  const AuthOnboardingIncomplete({required this.user, required this.step});
+
+  @override
+  List<Object?> get props => [user, step];
+}
 /// Successfully completed an action (PIN change, etc).
 class AuthActionSuccess extends AuthState {
   final String message;
